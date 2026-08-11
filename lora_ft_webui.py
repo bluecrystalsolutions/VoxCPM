@@ -17,7 +17,7 @@ sys.path.insert(0, str(project_root / "src"))
 # Default pretrained model path: prefer VoxCPM2 if it exists, fallback to VoxCPM1.5
 _v2_path = project_root / "models" / "openbmb__VoxCPM2"
 _v15_path = project_root / "models" / "openbmb__VoxCPM1.5"
-default_pretrained_path = str(_v2_path if _v2_path.exists() else _v15_path)
+default_pretrained_path = str(_v2_path) if _v2_path.exists() else (str(_v15_path) if _v15_path.exists() else "openbmb/VoxCPM2")
 
 from voxcpm.core import VoxCPM
 from voxcpm.model.voxcpm import LoRAConfig
@@ -99,6 +99,17 @@ training_log = ""
 
 def get_timestamp_str():
     return datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+def _resolve_pretrained_path(path_or_id: str) -> str:
+    """Resolve model path: use local dir if exists, otherwise download from HuggingFace Hub."""
+    if Path(path_or_id).exists():
+        return path_or_id
+    if "/" in path_or_id and not path_or_id.startswith(("/", ".", "~")):
+        from huggingface_hub import snapshot_download
+        print(f"📥 Downloading model from HuggingFace Hub: {path_or_id}", flush=True)
+        return snapshot_download(path_or_id)
+    return path_or_id
 
 
 def detect_sample_rate(pretrained_path: str) -> Optional[int]:
@@ -391,7 +402,7 @@ def start_training(
     weight_decay=0.01,
     warmup_steps=100,
     max_steps=None,
-    sample_rate=44100,
+    sample_rate=16000,
     max_grad_norm=1.0,
     # LoRA advanced
     enable_lm=True,
@@ -419,6 +430,9 @@ def start_training(
 
     os.makedirs(checkpoints_dir, exist_ok=True)
     os.makedirs(logs_dir, exist_ok=True)
+
+    # Resolve HuggingFace Hub IDs to local paths before reading config
+    pretrained_path = _resolve_pretrained_path(pretrained_path)
 
     # Auto-detect sample_rate from model config.json to prevent mismatch
     detected_sr = detect_sample_rate(pretrained_path)
@@ -971,7 +985,7 @@ with gr.Blocks(title="VoxCPM LoRA WebUI", theme=gr.themes.Soft(), css=custom_css
                             warmup_steps = gr.Number(label="warmup_steps", value=100, precision=0)
                         with gr.Row():
                             max_steps = gr.Number(label="最大步数 (max_steps, 0→默认num_iters)", value=0, precision=0)
-                            sample_rate = gr.Number(label="采样率 (sample_rate)", value=44100, precision=0)
+                            sample_rate = gr.Number(label="采样率 (sample_rate)", value=16000, precision=0)
                             max_grad_norm = gr.Number(label="梯度裁剪 (max_grad_norm, 0=关闭)", value=1.0)
                         with gr.Row():
                             tensorboard_path = gr.Textbox(label="Tensorboard 路径 (可选)", value="")
