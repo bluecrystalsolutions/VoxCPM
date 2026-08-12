@@ -90,6 +90,12 @@ def train(
     writer = SummaryWriter(log_dir=str(tb_dir)) if accelerator.rank == 0 else None
     tracker = TrainingTracker(writer=writer, log_file=str(save_dir / "train.log"), rank=accelerator.rank)
 
+    # Resolve HuggingFace Hub IDs to local paths (e.g. "openbmb/VoxCPM1.5")
+    if not os.path.isdir(pretrained_path):
+        from huggingface_hub import snapshot_download
+        print(f"Resolving model from HuggingFace Hub: {pretrained_path}", flush=True)
+        pretrained_path = snapshot_download(repo_id=pretrained_path)
+
     # Auto-detect model architecture from config.json
     with open(os.path.join(pretrained_path, "config.json"), "r", encoding="utf-8") as _f:
         _arch = json.load(_f).get("architecture", "voxcpm").lower()
