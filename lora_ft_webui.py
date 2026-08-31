@@ -912,7 +912,7 @@ with gr.Blocks(title="VoxCPM LoRA WebUI", theme=gr.themes.Soft(), css=custom_css
                         start_btn = gr.Button("▶️ " + t("start_train"), variant="primary", elem_classes="button-primary")
                         stop_btn = gr.Button("⏹️ " + t("stop_train"), variant="stop", elem_classes="button-stop")
 
-                    with gr.Accordion(t("advanced_accordion"), open=False, elem_classes="accordion"):
+                    with gr.Accordion(t("advanced_accordion"), open=False, elem_classes="accordion") as advanced_acc:
                         with gr.Row():
                             grad_accum_steps = gr.Number(label=t("grad_accum_steps"), value=1, precision=0)
                             num_workers = gr.Number(label=t("num_workers"), value=2, precision=0)
@@ -1155,6 +1155,8 @@ with gr.Blocks(title="VoxCPM LoRA WebUI", theme=gr.themes.Soft(), css=custom_css
             gr.update(label=d["output_name"]),
             gr.update(value=d["start_train"]),
             gr.update(value=d["stop_train"]),
+            # Advanced accordion title
+            gr.update(label=d["advanced_accordion"]),
             # Advanced options
             gr.update(label=d["grad_accum_steps"]),
             gr.update(label=d["num_workers"]),
@@ -1227,6 +1229,8 @@ with gr.Blocks(title="VoxCPM LoRA WebUI", theme=gr.themes.Soft(), css=custom_css
             output_name,
             start_btn,
             stop_btn,
+            # Advanced accordion title
+            advanced_acc,
             # Advanced options
             grad_accum_steps,
             num_workers,
