@@ -19,7 +19,7 @@ _v2_path = project_root / "models" / "openbmb__VoxCPM2"
 _v15_path = project_root / "models" / "openbmb__VoxCPM1.5"
 default_pretrained_path = str(_v2_path) if _v2_path.exists() else (str(_v15_path) if _v15_path.exists() else "openbmb/VoxCPM2")
 
-from voxcpm.core import VoxCPM
+from voxcpm.core import VoxCPM, resolve_model_path
 from voxcpm.model.voxcpm import LoRAConfig
 import numpy as np
 from funasr import AutoModel
@@ -36,17 +36,6 @@ training_log = ""
 
 def get_timestamp_str():
     return datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-
-
-def _resolve_pretrained_path(path_or_id: str) -> str:
-    """Resolve model path: use local dir if exists, otherwise download from HuggingFace Hub."""
-    if Path(path_or_id).exists():
-        return path_or_id
-    if "/" in path_or_id and not path_or_id.startswith(("/", ".", "~")):
-        from huggingface_hub import snapshot_download
-        print(f"📥 Downloading model from HuggingFace Hub: {path_or_id}", flush=True)
-        return snapshot_download(path_or_id)
-    return path_or_id
 
 
 def detect_sample_rate(pretrained_path: str) -> Optional[int]:
@@ -369,7 +358,7 @@ def start_training(
     os.makedirs(logs_dir, exist_ok=True)
 
     # Resolve HuggingFace Hub IDs to local paths before reading config
-    pretrained_path = _resolve_pretrained_path(pretrained_path)
+    pretrained_path = resolve_model_path(pretrained_path)
 
     # Auto-detect sample_rate from model config.json to prevent mismatch
     detected_sr = detect_sample_rate(pretrained_path)
