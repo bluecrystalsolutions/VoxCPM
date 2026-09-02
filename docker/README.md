@@ -71,7 +71,7 @@ Use absolute container paths (`/app/data/...`) in your manifest so the container
 
 If `models/openbmb__VoxCPM2/` exists on the host, the app loads directly from that path — no network access needed. If the directory is empty or missing, `from_pretrained` falls back to `snapshot_download` from HuggingFace Hub.
 
-The Dockerfile sets `HF_HOME=/app/models` so any Hub downloads land in the same mounted volume (matching the pattern in `deploy/Dockerfile.voxcpm-unified`). This means models persist across container restarts regardless of whether they were pre-populated or auto-downloaded.
+The Dockerfile sets `HF_HOME=/app/models` so any Hub downloads land in the same mounted volume. This means models persist across container restarts regardless of whether they were pre-populated or auto-downloaded.
 
 **Recommended:** Pre-populate to avoid first-run download delay:
 
@@ -83,11 +83,10 @@ The Dockerfile creates empty `/app/models`, `/app/lora`, `/app/output` directori
 
 ## Health Check
 
-The nginx proxy responds with `200 OK` on `GET /` for load balancer health checks (AWS ALB, etc.). This is separate from the WebUI at `/webui/`.
+The nginx proxy forwards `GET /` to the training-webui backend, so load balancer health checks (AWS ALB, etc.) reflect real application health — returning 502 when the backend is down. This is separate from the WebUI at `/webui/`.
 
 ```bash
 curl http://localhost/
-# OK
 ```
 
 ## Direct Access (no proxy)
@@ -121,7 +120,6 @@ docker run --gpus all -p 7860:7860 \
 |----------|---------|-------------|
 | `GRADIO_SERVER_PORT` | `7860` | Port for the WebUI server |
 | `GRADIO_ROOT_PATH` | `""` | URL prefix when behind a reverse proxy (e.g., `/webui`) |
-| `VOXCPM_LANG` | `zh` | Default UI language (`zh` or `en`) |
 
 ## Reverse Proxy
 
@@ -153,5 +151,5 @@ docker compose -f docker/docker-compose.yml logs -f training-webui
 - **OOM errors**: Reduce batch size in the WebUI or use a GPU with more VRAM.
 - **WebUI not accessible**: Check that port 80 (nginx) or 7860 (direct) isn't blocked by a firewall.
 - **WebSocket errors behind proxy**: Ensure your proxy forwards `Upgrade` and `Connection` headers (the included nginx.conf handles this).
-- **Health check failing**: Ensure nginx is running — `curl http://localhost/` should return `OK`.
+- **Health check failing**: Ensure the training-webui container is running — `curl http://localhost/` proxies to the backend and returns 502 if it's unreachable.
 - **Mixed-content / audio not playing over HTTPS**: The nginx config uses `map $http_x_forwarded_proto` to pass the correct protocol through to Gradio. This ensures `https://` file URLs are generated when accessed via HTTPS through a load balancer.
