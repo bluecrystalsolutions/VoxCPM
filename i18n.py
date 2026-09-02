@@ -82,6 +82,11 @@ STRINGS = {
         "info_steps": "生成质量与步数成正比，但耗时更长",
         "info_seed": "-1 为随机，固定值可复现结果",
         "info_lora_select": "选择训练好的 LoRA 模型，或选择 None 使用基础模型",
+        "log_ref_audio_no_text": "参考音频已提供但缺少文本，自动识别中...",
+        "log_auto_recognized": "自动识别文本: {text}",
+        "error_asr_failed": "错误：无法识别参考音频内容，请手动填写参考文本",
+        "error_asr_exception": "错误：自动识别参考音频失败 - {error}",
+        "log_refresh_lora": "刷新 LoRA 列表: 找到 {count} 个检查点",
     },
     "en": {
         "title": "VoxCPM LoRA WebUI",
@@ -153,6 +158,11 @@ STRINGS = {
         "tensorboard_path": "Tensorboard Path (Optional)",
         "hf_model_id": "HuggingFace Model ID (e.g., openbmb/VoxCPM2)",
         "distribute": "Distribute Mode",
+        "log_ref_audio_no_text": "Reference audio provided without text, auto-recognizing...",
+        "log_auto_recognized": "Auto-recognized text: {text}",
+        "error_asr_failed": "Error: Could not recognize reference audio, please enter reference text manually",
+        "error_asr_exception": "Error: Reference audio recognition failed - {error}",
+        "log_refresh_lora": "Refresh LoRA list: found {count} checkpoints",
     },
 }
 

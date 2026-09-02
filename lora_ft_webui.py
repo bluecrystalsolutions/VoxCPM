@@ -279,15 +279,15 @@ def run_inference(text, prompt_wav, prompt_text, lora_selection, cfg_scale, step
 
         # 如果没有提供参考文本，尝试自动识别
         if not prompt_text or not prompt_text.strip():
-            print("参考音频已提供但缺少文本，自动识别中...", file=sys.stderr)
+            print(t("log_ref_audio_no_text"), file=sys.stderr)
             try:
                 final_prompt_text = recognize_audio(prompt_wav)
                 if final_prompt_text:
-                    print(f"自动识别文本: {final_prompt_text}", file=sys.stderr)
+                    print(t("log_auto_recognized").format(text=final_prompt_text), file=sys.stderr)
                 else:
-                    return None, "错误：无法识别参考音频内容，请手动填写参考文本"
+                    return None, t("error_asr_failed")
             except Exception as e:
-                return None, f"错误：自动识别参考音频失败 - {str(e)}"
+                return None, t("error_asr_exception").format(error=str(e))
         else:
             final_prompt_text = prompt_text.strip()
     # 如果没有参考音频，两个都设为 None（用于零样本 TTS）
@@ -835,7 +835,7 @@ with gr.Blocks(title="VoxCPM LoRA WebUI", theme=gr.themes.Soft(), css=custom_css
     # State for language
     lang_state = gr.State(DEFAULT_LANG)
 
-    # Title area
+    # 标题区域
     with gr.Row(elem_classes="title-section"):
         with gr.Column(scale=3):
             title_md = gr.Markdown(f"""
@@ -995,7 +995,7 @@ with gr.Blocks(title="VoxCPM LoRA WebUI", theme=gr.themes.Soft(), css=custom_css
             """)
 
             with gr.Row():
-                # Left column: Input config (35%)
+                # 左栏：输入配置 (35%)
                 with gr.Column(scale=35, elem_classes="form-section"):
                     input_config_md = gr.Markdown(t("input_config_header"))
 
@@ -1017,7 +1017,7 @@ with gr.Blocks(title="VoxCPM LoRA WebUI", theme=gr.themes.Soft(), css=custom_css
                         placeholder=t("placeholder_ref_text"),
                     )
 
-                # Middle column: Model selection and parameters (35%)
+                # 中栏：模型选择和参数配置 (35%)
                 with gr.Column(scale=35, elem_classes="form-section"):
                     model_select_md = gr.Markdown(t("model_select_header"))
 
@@ -1062,7 +1062,7 @@ with gr.Blocks(title="VoxCPM LoRA WebUI", theme=gr.themes.Soft(), css=custom_css
 
                     generate_btn = gr.Button("🎵 " + t("gen_audio"), variant="primary", elem_classes="button-primary", size="lg")
 
-                # Right column: Generated output (30%)
+                # 右栏：生成结果 (30%)
                 with gr.Column(scale=30, elem_classes="form-section"):
                     gen_output_md = gr.Markdown(t("gen_output_header"))
 
@@ -1080,10 +1080,12 @@ with gr.Blocks(title="VoxCPM LoRA WebUI", theme=gr.themes.Soft(), css=custom_css
                     )
 
             def refresh_loras():
+                # 获取 LoRA checkpoints 及其 base model 信息
                 checkpoints_with_info = scan_lora_checkpoints(with_info=True)
                 choices = ["None"] + [ckpt[0] for ckpt in checkpoints_with_info]
 
-                print(f"Refresh LoRA list: found {len(checkpoints_with_info)} checkpoints", file=sys.stderr)
+                # 输出调试信息
+                print(t("log_refresh_lora").format(count=len(checkpoints_with_info)), file=sys.stderr)
                 for ckpt_path, base_model in checkpoints_with_info:
                     if base_model:
                         print(f"  - {ckpt_path} (Base Model: {base_model})", file=sys.stderr)
